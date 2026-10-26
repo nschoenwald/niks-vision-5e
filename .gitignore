@@ -4,4 +4,7 @@
 /script.js
 /script.js.map
 
-/CHANGELOG_internal.md
+# Markdown: ignore all, except the docs shipped with the module
+*.md
+!README.md
+!CHANGELOG.md
