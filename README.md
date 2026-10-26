@@ -238,3 +238,9 @@ _Note: The automation is not case-sensitive._
 _Note: You may use `'` or `’` for apostrophes._
 
 _Note: In French the colon (`:`) is preceded by a space, but it isn't required in order for the automation to detect the feat. For example, both `Manifestation : Regard fantomatique` and `Manifestation: Regard fantomatique` work._
+
+---
+
+### Releasing
+
+Publishing a GitHub release (for example with the tag `v14.0.0`) runs the `Release Module` workflow. It builds `script.js` with rollup, points the `download` URL in `module.json` at the release, and attaches `module.zip` and `module.json` to the release. Nothing is published to the Foundry package repository. Bump `version` in `module.json` before tagging.
