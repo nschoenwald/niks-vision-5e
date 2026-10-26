@@ -16,7 +16,7 @@ import DetectionModeDetectPoisonAndDisease from "./detection-modes/detect-poison
 import DetectionModeDetectThoughts from "./detection-modes/detect-thoughts.mjs";
 import DetectionModeDevilsSight from "./detection-modes/devils-sight.mjs";
 import DetectionModeDivineSense from "./detection-modes/divine-sense.mjs";
-import DetectionModeEtherealSight from "./detection-modes/ethereral-sight.mjs";
+import DetectionModeEtherealSight from "./detection-modes/ethereal-sight.mjs";
 import DetectionModeEyesOfTheGrave from "./detection-modes/eyes-of-the-grave.mjs";
 import DetectionModeHearing from "./detection-modes/hearing.mjs";
 import DetectionModeLifeSense from "./detection-modes/life-sense.mjs";
@@ -58,7 +58,7 @@ Hooks.once("init", () => {
     // Register the Inaudible status effect
     CONFIG.DND5E.conditionTypes.inaudible = {
         name: "VISION5E.Inaudible",
-        img: "modules/vision-5e/icons/inaudible.svg",
+        img: "modules/niks-vision-5e/icons/inaudible.svg",
         pseudo: true,
         special: "INAUDIBLE",
     };

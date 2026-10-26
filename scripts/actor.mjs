@@ -1,5 +1,6 @@
 import { defaultHearingRange } from "./settings.mjs";
-import { Matcher, convertUnits, toFeet } from "./utils.mjs";
+import { invalidateSpectatorUsers } from "./token.mjs";
+import { Matcher, convertUnits, fromFeet } from "./utils.mjs";
 
 export default (Actor) => class extends Actor {
     /**  @type {Record<string, number>} */
@@ -11,14 +12,6 @@ export default (Actor) => class extends Actor {
         const wasEthereal = this.statuses?.has(CONFIG.specialStatusEffects.ETHEREAL);
 
         super.prepareData();
-
-        let objectsEqual;
-
-        if (game.release.generation >= 14) {
-            objectsEqual = foundry.utils.equals;
-        } else {
-            objectsEqual = foundry.utils.objectsEqual;
-        }
 
         if (!detectionModes || objectsEqual(this.detectionModes, detectionModes)
             && wasEthereal === this.statuses.has(CONFIG.specialStatusEffects.ETHEREAL)) {
@@ -39,6 +32,16 @@ export default (Actor) => class extends Actor {
     }
 
     /** @override */
+    _onUpdate(changed, options, userId) {
+        // Ownership changes affect which tokens are spectated
+        if ("ownership" in changed) {
+            invalidateSpectatorUsers();
+        }
+
+        super._onUpdate(changed, options, userId);
+    }
+
+    /** @override */
     prepareDerivedData() {
         super.prepareDerivedData();
 
@@ -49,18 +52,6 @@ export default (Actor) => class extends Actor {
             || itemPile.type === game.itempiles.pile_types.VAULT)) {
             this.statuses.add(CONFIG.specialStatusEffects.OBJECT);
             this.statuses.add(CONFIG.specialStatusEffects.INAUDIBLE);
-        }
-
-        if (hasMagicalAura(this)) {
-            this.statuses.add(CONFIG.specialStatusEffects.MAGICAL);
-        }
-
-        if (isPoisonous(this)) {
-            this.statuses.add(CONFIG.specialStatusEffects.POISONOUS);
-        }
-
-        if (isThinking(this)) {
-            this.statuses.add(CONFIG.specialStatusEffects.THINKING);
         }
 
         if (this.type === "vehicle") {
@@ -77,7 +68,7 @@ export default (Actor) => class extends Actor {
         let senses = this.system.attributes?.senses;
         const units = senses?.units;
 
-        if (!foundry.utils.isNewerVersion("5.3.0", game.system.version)) {
+        if (sensesHaveRanges()) {
             senses = senses?.ranges;
         }
 
@@ -86,21 +77,33 @@ export default (Actor) => class extends Actor {
             this.detectionModes.seeAll = senses.truesight;
             this.detectionModes.blindsight = senses.blindsight;
             this.detectionModes.feelTremor = senses.tremorsense;
-            this.detectionModes.hearing = Math.max(toFeet(typeof defaultHearingRange === "string"
-                ? new foundry.dice.Roll(defaultHearingRange, this.getRollData({ deterministic: true })).evaluateSync().total
-                : defaultHearingRange, units), 0);
+
+            const hearingRange = typeof defaultHearingRange === "string"
+                ? evaluateHearingRange(this)
+                : defaultHearingRange;
+
+            this.detectionModes.hearing = Math.max(fromFeet(hearingRange, units), 0);
         }
 
+        // Objects and petrified creatures are neither poisonous nor thinking
+        const isCreature = !this.statuses.has(CONFIG.specialStatusEffects.OBJECT)
+            && !this.statuses.has(CONFIG.specialStatusEffects.PETRIFIED);
         const featRegistry = FEAT_REGISTRY[this.type];
+        const featMatcher = FEAT_MATCHERS[this.type];
+        let magical = false;
+        let poisonous = false;
 
-        if (featRegistry) {
-            const featMatcher = FEAT_MATCHERS[this.type];
+        // Inspect all items in a single pass
+        for (const item of this.items) {
+            if (!magical && isVisibleMagicItem(item)) {
+                magical = true;
+            }
 
-            for (const item of this.items) {
-                if (item.type !== "feat") {
-                    continue;
-                }
+            if (isCreature && !poisonous && isPoisonousNaturalWeapon(item)) {
+                poisonous = true;
+            }
 
+            if (featRegistry && item.type === "feat") {
                 const id = featMatcher.match(item.name);
 
                 if (id) {
@@ -110,17 +113,33 @@ export default (Actor) => class extends Actor {
         }
 
         const effectRegistry = EFFECT_REGISTRY[this.type];
+        const effectMatcher = EFFECT_MATCHERS[this.type];
 
-        if (effectRegistry) {
-            const effectMatcher = EFFECT_MATCHERS[this.type];
+        // Inspect all applied effects in a single pass
+        for (const effect of this.appliedEffects) {
+            if (!magical && isMagicEffect(effect)) {
+                magical = true;
+            }
 
-            for (const effect of this.appliedEffects) {
+            if (effectRegistry) {
                 const id = effectMatcher.match(effect.name);
 
                 if (id) {
                     effectRegistry[id].call(this, effect);
                 }
             }
+        }
+
+        if (magical) {
+            this.statuses.add(CONFIG.specialStatusEffects.MAGICAL);
+        }
+
+        if (poisonous) {
+            this.statuses.add(CONFIG.specialStatusEffects.POISONOUS);
+        }
+
+        if (isCreature && isThinking(this)) {
+            this.statuses.add(CONFIG.specialStatusEffects.THINKING);
         }
 
         for (const id in this.detectionModes) {
@@ -130,6 +149,76 @@ export default (Actor) => class extends Actor {
         }
     }
 };
+
+/**
+ * @param {object} a
+ * @param {object} b
+ * @returns {boolean}
+ */
+function objectsEqual(a, b) {
+    return game.release.generation >= 14 ? foundry.utils.equals(a, b) : foundry.utils.objectsEqual(a, b);
+}
+
+/** @type {boolean | undefined} */
+let _sensesHaveRanges;
+
+/**
+ * Since D&D 5e 5.3.0 the sense ranges are stored in `senses.ranges`.
+ * @returns {boolean}
+ */
+function sensesHaveRanges() {
+    return _sensesHaveRanges ??= !foundry.utils.isNewerVersion("5.3.0", game.system.version);
+}
+
+/**
+ * Evaluated hearing ranges keyed by the formula after roll data substitution.
+ * @type {Map<string, number>}
+ */
+const HEARING_RANGE_CACHE = new Map();
+
+/**
+ * Evaluate the default hearing range formula for the actor.
+ * The formula is deterministic, so the result only depends on the substituted formula.
+ * @param {Actor} actor
+ * @returns {number}
+ */
+function evaluateHearingRange(actor) {
+    const formula = foundry.dice.Roll.replaceFormulaData(defaultHearingRange,
+        actor.getRollData({ deterministic: true }), { missing: "0" });
+    let range = HEARING_RANGE_CACHE.get(formula);
+
+    if (range === undefined) {
+        range = new foundry.dice.Roll(formula).evaluateSync().total;
+        HEARING_RANGE_CACHE.set(formula, range);
+    }
+
+    return range;
+}
+
+/**
+ * Plain text of descriptions keyed by their HTML.
+ * @type {Map<string, string>}
+ */
+const PLAIN_TEXT_CACHE = new Map();
+
+/**
+ * @param {string} html
+ * @returns {string}
+ */
+function getPlainText(html) {
+    let text = PLAIN_TEXT_CACHE.get(html);
+
+    if (text === undefined) {
+        if (PLAIN_TEXT_CACHE.size >= 256) {
+            PLAIN_TEXT_CACHE.clear();
+        }
+
+        text = new DOMParser().parseFromString(html, "text/html").body.textContent || "";
+        PLAIN_TEXT_CACHE.set(html, text);
+    }
+
+    return text;
+}
 
 /**
  * @param {Actor} actor
@@ -156,14 +245,13 @@ function upgradeDetectionMode(actor, id, range, units) {
 }
 
 /**
- * @param {Document} document
+ * @param {string} description
  * @param {string} units
  * @param {number} [defaultRange]
  * @returns {number | undefined}
  */
 function findRange(description, units, defaultRange) {
-    const result = new DOMParser().parseFromString(description, "text/html").body.textContent
-        ?.match(/(?<=^|\D)(?<range>[1-9]\d*)\s*(?:(?<ft>ft|feet|Fuß|pieds?|pies?|pés?)|(?<m>m|meters?|metres?|Meter|mètres?|metros?))(?=$|[\s.:,;])/i);
+    const result = getPlainText(description).match(/(?<=^|\D)(?<range>[1-9]\d*)\s*(?:(?<ft>ft|feet|Fuß|pieds?|pies?|pés?)|(?<m>m|meters?|metres?|Meter|mètres?|metros?))(?=$|[\s.:,;])/i);
 
     return result ? convertUnits(Number(result.groups.range), result.groups.ft !== undefined ? "ft" : "m", units) : defaultRange;
 }
@@ -200,16 +288,9 @@ function isVisibleMagicItem(item) {
  * @returns {boolean}
  */
 function isMagicEffect(effect) {
-    return effect.system.magical ?? (effect.flags.dnd5e?.spellLevel !== undefined && !effect.statuses.has(CONFIG.specialStatusEffects.CONCENTRATING));
-}
-
-/**
- * @param {Actor} actor
- * @returns {boolean}
- */
-function hasMagicalAura(actor) {
-    // Does the actor carry a visible magical item or is the actor affected by a spell effect?
-    return actor.items.some(isVisibleMagicItem) || actor.appliedEffects.some(isMagicEffect);
+    // D&D 5e effects always have a boolean `magical` field, so effects created by spells are considered as well
+    return effect.system.magical === true
+        || effect.flags.dnd5e?.spellLevel !== undefined && !effect.statuses.has(CONFIG.specialStatusEffects.CONCENTRATING);
 }
 
 /**
@@ -230,6 +311,7 @@ function isPoisonousAttack(activity) {
 }
 
 /**
+ * A poisonous creature is a creature that has a poisonous natural weapon attack.
  * @param {Item} item
  * @returns {boolean}
  */
@@ -241,30 +323,11 @@ function isPoisonousNaturalWeapon(item) {
 }
 
 /**
- * A poisonous creature is a creature that has a poisonous natural weapon attack.
- * @param {Actor} actor
- * @returns {boolean}
- */
-function isPoisonous(actor) {
-    if (actor.statuses.has(CONFIG.specialStatusEffects.OBJECT)
-        || actor.statuses.has(CONFIG.specialStatusEffects.PETRIFIED)) {
-        return false;
-    }
-
-    return actor.items.some(isPoisonousNaturalWeapon);
-}
-
-/**
  * A thinking creature is a creature that speaks at least one language or is telepathic.
  * @param {Actor} actor
  * @returns {boolean}
  */
 function isThinking(actor) {
-    if (actor.statuses.has(CONFIG.specialStatusEffects.OBJECT)
-        || actor.statuses.has(CONFIG.specialStatusEffects.PETRIFIED)) {
-        return false;
-    }
-
     return (actor.type === "character" || actor.type === "npc")
         && (actor.system.traits.languages.value.size > 0
             || !!actor.system.traits.languages.custom);
@@ -304,7 +367,7 @@ const FEAT_REGISTRY = {
         etherealness(item) {
             if (this.statuses.has(CONFIG.specialStatusEffects.ETHEREAL)
                 && / (?:visible on the Material Plane|auf der Materiellen Ebene sichtbar|visible sur le plan matériel|visible también en el Plano Material|visível no Plano Material)[ .,]/i
-                    .test(new DOMParser().parseFromString(item.system.description.value, "text/html").body.textContent || "")) {
+                    .test(getPlainText(item.system.description.value))) {
                 this.statuses.add(CONFIG.specialStatusEffects.MATERIAL);
             }
         },
@@ -700,7 +763,7 @@ const DATABASE = {
             "Recluir",
         ],
         thermalVision: [
-            "Termowizja",
+            "Visión Térmica",
         ],
         umbralSight: [
             "Visión en la Umbra",
@@ -826,11 +889,6 @@ Hooks.once("init", () => {
     // Detect Thoughts in PHB'14 requires an Intelligence of 4 or higher.
     // eslint-disable-next-line no-func-assign
     isThinking = function (actor) {
-        if (actor.statuses.has(CONFIG.specialStatusEffects.OBJECT)
-            || actor.statuses.has(CONFIG.specialStatusEffects.PETRIFIED)) {
-            return false;
-        }
-
         return (actor.type === "character" || actor.type === "npc")
             && actor.system.abilities.int.value > 3
             && (actor.system.traits.languages.value.size > 0

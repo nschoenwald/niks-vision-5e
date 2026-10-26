@@ -1,9 +1,15 @@
-[![Latest Version](https://img.shields.io/github/v/release/dev7355608/vision-5e?display_name=tag&sort=semver&label=Latest%20Version)](https://github.com/dev7355608/vision-5e/releases/latest)
-![Foundry Version](https://img.shields.io/endpoint?url=https://foundryshields.com/version?url=https%3A%2F%2Fraw.githubusercontent.com%2Fdev7355608%2Fvision-5e%2Fmain%2Fmodule.json)
-[![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fvision-5e&colorB=blueviolet)](https://forge-vtt.com/bazaar#package=vision-5e)
-[![License](https://img.shields.io/github/license/dev7355608/vision-5e?label=License)](LICENSE)
+[![Latest Version](https://img.shields.io/github/v/release/nschoenwald/niks-vision-5e?display_name=tag&sort=semver&label=Latest%20Version)](https://github.com/nschoenwald/niks-vision-5e/releases/latest)
+![Foundry Version](https://img.shields.io/endpoint?url=https://foundryshields.com/version?url=https%3A%2F%2Fraw.githubusercontent.com%2Fnschoenwald%2Fniks-vision-5e%2Fmain%2Fmodule.json)
+[![License](https://img.shields.io/github/license/nschoenwald/niks-vision-5e?label=License)](LICENSE)
 
-# Vision 5e (Foundry VTT Module)
+# Nik's Vision 5e (Foundry VTT Module)
+
+> A fork of [Vision 5e](https://github.com/dev7355608/vision-5e) by dev7355608, maintained for Foundry VTT V14 and D&D 5e 6.x.
+
+**Installation:** In Foundry's *Install Module* dialog, paste this manifest URL:
+`https://github.com/nschoenwald/niks-vision-5e/releases/latest/download/module.json`
+
+_Note: This module has its own module ID (`niks-vision-5e`). Disable the original Vision 5e module if you use this one, and re-enter the module settings (Default Hearing Range, Spectator Mode) after switching. See [CHANGELOG.md](CHANGELOG.md) for what changed._
 
 Additional and improved Vision/Detection modes for D&D 5e including automatic vision management based on the actor's senses, feats, and active effects.
 

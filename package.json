@@ -1,16 +1,15 @@
 {
-    "name": "vision-5e",
-    "description": "Vision 5e (Foundry VTT Module)",
+    "name": "niks-vision-5e",
+    "description": "Nik's Vision 5e (Foundry VTT Module)",
     "author": {
         "name": "dev7355608",
         "email": "dev7355608@gmail.com",
         "url": "https://github.com/dev7355608"
     },
     "license": "MIT",
-    "homepage": "https://github.com/dev7355608/vision-5e",
+    "homepage": "https://github.com/nschoenwald/niks-vision-5e",
     "bugs": {
-        "url": "https://github.com/dev7355608/vision-5e/issues",
-        "email": "dev7355608@gmail.com"
+        "url": "https://github.com/nschoenwald/niks-vision-5e/issues"
     },
     "private": true,
     "scripts": {
@@ -29,5 +28,6 @@
         "globals": "^16.1.0",
         "rimraf": "^6.0.1",
         "rollup": "^4.40.0"
-    }
+    },
+    "version": "14.0.0"
 }

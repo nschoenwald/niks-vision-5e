@@ -1,3 +1,11 @@
+import { DETECTION_LEVELS } from "../const.mjs";
+
+/**
+ * The vision sources collection used while testing visibility for a single vision source.
+ * @type {foundry.utils.Collection<string, foundry.canvas.sources.PointVisionSource>}
+ */
+const SINGLE_VISION_SOURCE = new foundry.utils.Collection();
+
 export default class extends foundry.canvas.perception.DetectionMode {
     /** @override */
     static defineSchema() {
@@ -76,5 +84,58 @@ export default class extends foundry.canvas.perception.DetectionMode {
                 return CONFIG.Canvas.polygonBackends[type].testCollision(origin, destination, config);
             };
         });
+    }
+
+    /**
+     * Test whether the vision source detects the target with any of its precise sight detection modes.
+     * The vision source's detection modes, the canvas vision sources, and the target's statuses
+     * are restored afterwards even if the test throws.
+     * @param {foundry.canvas.sources.PointVisionSource} visionSource
+     * @param {foundry.canvas.placeables.Token} target
+     * @param {foundry.types.CanvasVisibilityTest} test
+     * @param {string[]} [ignoredStatuses]    Statuses of the target that are ignored during the test.
+     * @returns {boolean}
+     * @protected
+     */
+    _testPreciseSight(visionSource, target, test, ignoredStatuses = []) {
+        const effects = canvas.effects;
+        const visionSources = effects.visionSources;
+        const document = visionSource.object.document;
+        const detectionModes = document.detectionModes;
+        const detectionLevel = target._detectionLevel;
+        const statuses = target.document.actor?.statuses;
+        const removedStatuses = [];
+
+        try {
+            SINGLE_VISION_SOURCE.clear();
+            SINGLE_VISION_SOURCE.set(visionSource.sourceId, visionSource);
+            effects.visionSources = SINGLE_VISION_SOURCE;
+
+            // Prevent the nested test from assigning the detection level and filter of the target
+            target._detectionLevel = DETECTION_LEVELS.NONE;
+
+            document._filterDetectionModes((id) => {
+                const mode = CONFIG.Canvas.detectionModes[id];
+
+                return mode && mode !== this && mode.type === this.constructor.DETECTION_TYPES.SIGHT && !mode.imprecise;
+            });
+
+            for (const statusId of ignoredStatuses) {
+                if (statuses?.delete(statusId)) {
+                    removedStatuses.push(statusId);
+                }
+            }
+
+            return canvas.visibility.testVisibility(test.point, { tolerance: 0, object: target });
+        } finally {
+            for (const statusId of removedStatuses) {
+                statuses.add(statusId);
+            }
+
+            target._detectionLevel = detectionLevel;
+            document.detectionModes = detectionModes;
+            effects.visionSources = visionSources;
+            SINGLE_VISION_SOURCE.clear();
+        }
     }
 }

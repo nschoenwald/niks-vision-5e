@@ -2,7 +2,7 @@ export default (TokenHUD) => class extends TokenHUD {
     /** @override */
     static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS, {
         actions: {
-            "vision-5e.visionMode": this.#onSelectVisionMode,
+            "niks-vision-5e.visionMode": this.#onSelectVisionMode,
         },
     }, { inplace: false });
 
@@ -18,7 +18,7 @@ export default (TokenHUD) => class extends TokenHUD {
 
             button.classList.add("control-icon");
             button.dataset.action = "togglePalette";
-            button.dataset.palette = "vision-5e.visionModes";
+            button.dataset.palette = "niks-vision-5e.visionModes";
             button.dataset.tooltip = "VISION5E.TOOLTIPS.SelectVisionMode";
             button.ariaLabel = game.i18n.localize("VISION5E.TOOLTIPS.SelectVisionMode");
 
@@ -34,14 +34,14 @@ export default (TokenHUD) => class extends TokenHUD {
             const div = document.createElement("div");
 
             div.classList.add("palette");
-            div.dataset.palette = "vision-5e.visionModes";
+            div.dataset.palette = "niks-vision-5e.visionModes";
 
             for (const mode of visionModes) {
                 const a = document.createElement("a");
 
                 a.classList.add("flexrow");
                 a.classList.toggle("active", mode.id === this.document.sight.visionMode);
-                a.dataset.action = "vision-5e.visionMode";
+                a.dataset.action = "niks-vision-5e.visionMode";
                 a.dataset.visionModeId = mode.id;
 
                 const span = document.createElement("span");

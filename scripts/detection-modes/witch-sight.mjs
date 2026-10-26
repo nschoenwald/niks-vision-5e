@@ -1,5 +1,4 @@
 import DetectionMode from "./base.mjs";
-import { DETECTION_LEVELS } from "../const.mjs";
 
 const { Token } = foundry.canvas.placeables;
 
@@ -38,31 +37,7 @@ export default class DetectionModeWitchSight extends DetectionMode {
             return false;
         }
 
-        const visionSources = canvas.effects.visionSources;
-
-        canvas.effects.visionSources = new foundry.utils.Collection();
-        canvas.effects.visionSources.set(visionSource.sourceId, visionSource);
-
-        const detectionModes = visionSource.object.document.detectionModes;
-        const detectionLevel = target._detectionLevel;
-
-        target._detectionLevel = DETECTION_LEVELS.NONE;
-
-        visionSource.object.document._filterDetectionModes(
-            (id) => {
-                const mode = CONFIG.Canvas.detectionModes[id];
-
-                return mode && mode !== this && mode.type === DetectionMode.DETECTION_TYPES.SIGHT && !mode.imprecise;
-            },
-        );
-
         // Test whether this vision source sees the target
-        const result = canvas.visibility.testVisibility(test.point, { tolerance: 0, object: target });
-
-        target._detectionLevel = detectionLevel;
-        visionSource.object.document.detectionModes = detectionModes;
-        canvas.effects.visionSources = visionSources;
-
-        return result;
+        return this._testPreciseSight(visionSource, target, test);
     }
 }

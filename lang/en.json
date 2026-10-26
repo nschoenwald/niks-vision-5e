@@ -20,6 +20,6 @@
     "VISION5E.SETTINGS.defaultHearingRange.hint": "Configure how far tokens can hear by default. Requires the world to be reloaded.",
     "VISION5E.SETTINGS.spectatorMode.label": "Spectator Mode",
     "VISION5E.SETTINGS.spectatorMode.hint": "Configure whether tokens belonging to actors the player has limited permissions for can provide vision when all of the player's own tokens are defeated, petrified, or unconscious.",
-    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Automatically managed by Vision 5e",
+    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Automatically managed by Nik's Vision 5e",
     "VISION5E.TOOLTIPS.SelectVisionMode": "Select Vision Mode"
 }

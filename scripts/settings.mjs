@@ -21,7 +21,7 @@ const spectatorModeField = new foundry.data.fields.BooleanField({ initial: true 
 
 Hooks.once("init", () => {
     game.settings.register(
-        "vision-5e",
+        "niks-vision-5e",
         "defaultHearingRange",
         {
             name: "VISION5E.SETTINGS.defaultHearingRange.label",
@@ -33,7 +33,7 @@ Hooks.once("init", () => {
         },
     );
 
-    const formula = game.settings.get("vision-5e", "defaultHearingRange");
+    const formula = game.settings.get("niks-vision-5e", "defaultHearingRange");
 
     if (foundry.dice.Roll.validate(formula)) {
         try {
@@ -46,7 +46,7 @@ Hooks.once("init", () => {
     }
 
     game.settings.register(
-        "vision-5e",
+        "niks-vision-5e",
         "spectatorMode",
         {
             name: "VISION5E.SETTINGS.spectatorMode.label",
@@ -62,7 +62,7 @@ Hooks.once("init", () => {
                 }
 
                 for (const token of canvas.tokens.placeables) {
-                    if (!token.vision === token._isVisionSource()) {
+                    if (!!token.vision !== token._isVisionSource()) {
                         token.initializeVisionSource();
                     }
                 }
@@ -70,7 +70,7 @@ Hooks.once("init", () => {
         },
     );
 
-    spectatorMode = game.settings.get("vision-5e", "spectatorMode");
+    spectatorMode = game.settings.get("niks-vision-5e", "spectatorMode");
 });
 
 Hooks.once("i18nInit", () => {
@@ -90,7 +90,7 @@ Hooks.once("setup", () => {
             return;
         }
 
-        element.querySelector(`input[name="vision-5e.defaultHearingRange"]`).placeholder = "0";
+        element.querySelector(`input[name="niks-vision-5e.defaultHearingRange"]`).placeholder = "0";
     });
 });
 
@@ -101,7 +101,7 @@ Hooks.once("ready", () => {
 
     const content = window.document.createElement("div");
 
-    if (!game.settings.storage.get("world").some((setting) => setting.key === "vision-5e.defaultHearingRange")) {
+    if (!game.settings.storage.get("world").some((setting) => setting.key === "niks-vision-5e.defaultHearingRange")) {
         const inputConfig = { name: "defaultHearingRange" };
 
         if (game.release.generation === 13) {
@@ -111,7 +111,7 @@ Hooks.once("ready", () => {
         content.append(defaultHearingRangeField.toFormGroup({}, inputConfig));
     }
 
-    if (!game.settings.storage.get("world").some((setting) => setting.key === "vision-5e.spectatorMode")) {
+    if (!game.settings.storage.get("world").some((setting) => setting.key === "niks-vision-5e.spectatorMode")) {
         content.append(spectatorModeField.toFormGroup({}, { name: "spectatorMode" }));
     }
 
@@ -121,7 +121,7 @@ Hooks.once("ready", () => {
 
     foundry.applications.api.DialogV2.prompt({
         window: {
-            title: `${game.i18n.localize("SETTINGS.Title")}: Vision 5e`,
+            title: `${game.i18n.localize("SETTINGS.Title")}: Nik's Vision 5e`,
             icon: "fa-solid fa-gears",
         },
         position: {
@@ -135,11 +135,11 @@ Hooks.once("ready", () => {
                 let requiresReload = false;
 
                 for (const [key, value] of Object.entries(settings)) {
-                    if (game.settings.settings.get(`vision-5e.${key}`).requiresReload) {
-                        requiresReload ||= value !== game.settings.get("vision-5e", key);
+                    if (game.settings.settings.get(`niks-vision-5e.${key}`).requiresReload) {
+                        requiresReload ||= value !== game.settings.get("niks-vision-5e", key);
                     }
 
-                    promises.push(game.settings.set("vision-5e", key, value));
+                    promises.push(game.settings.set("niks-vision-5e", key, value));
                 }
 
                 await Promise.all(promises);

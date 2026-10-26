@@ -15,8 +15,11 @@
     "VISION5E.SeeInvisibility": "Ver Invisibilidad",
     "VISION5E.ThermalVision": "Visión Térmica",
     "VISION5E.WitchSight": "Visión Bruja",
+    "VISION5E.HINTS.DarknessSource": "La visión en la oscuridad y la visión térmica siempre son bloqueadas por fuentes de oscuridad. La vista del diablo y la visión verdadera solo son bloqueadas si la prioridad es al menos 100. Los demás modos de detección nunca son bloqueados.",
     "VISION5E.SETTINGS.defaultHearingRange.label": "Distancia de audición por defecto",
     "VISION5E.SETTINGS.defaultHearingRange.hint": "Configura que tan lejos pueden oír los tokens por defecto. Requiere que el mundo sea recargado.",
-    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Gestionado automáticamente por Vision 5e",
-    "VISION5E.TOOLTIPS.SelectVisionMode": "Sélectionner type de vision"
+    "VISION5E.SETTINGS.spectatorMode.label": "Modo espectador",
+    "VISION5E.SETTINGS.spectatorMode.hint": "Configura si los tokens de actores sobre los que el jugador tiene permisos limitados pueden proporcionar visión cuando todos los tokens propios del jugador están derrotados, petrificados o inconscientes.",
+    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Gestionado automáticamente por Nik's Vision 5e",
+    "VISION5E.TOOLTIPS.SelectVisionMode": "Seleccionar modo de visión"
 }

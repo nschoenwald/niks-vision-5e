@@ -1,4 +1,5 @@
 import { convertUnits, fromFeet } from "./utils.mjs";
+import { invalidateDetectionTests } from "./visibility.mjs";
 
 export default (TokenDocument) => class extends TokenDocument {
     /** @override */
@@ -126,6 +127,8 @@ export default (TokenDocument) => class extends TokenDocument {
      * @internal
      */
     _setDetectionMode(id, range, enabled = true) {
+        invalidateDetectionTests(this.detectionModes);
+
         if (game.release.generation >= 14) {
             this.detectionModes[id] = { range, enabled };
         } else {

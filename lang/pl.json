@@ -20,6 +20,6 @@
     "VISION5E.SETTINGS.defaultHearingRange.hint": "Konfiguruje domyślną odległość słyszalności tokenów. Wymaga przeładowania świata.",
     "VISION5E.SETTINGS.spectatorMode.label": "Tryb widza",
     "VISION5E.SETTINGS.spectatorMode.hint": "Skonfiguruj, czy tokeny należące do aktorów, dla których gracz ma ograniczone uprawnienia, mogą zapewniać widoczność, gdy wszystkie tokeny gracza zostaną pokonane, skamieniałe lub nieprzytomne.",
-    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Automatycznie zarządzane przez Vision 5e",
+    "VISION5E.TOOLTIPS.AutomaticallyManaged": "Automatycznie zarządzane przez Nik's Vision 5e",
     "VISION5E.TOOLTIPS.SelectVisionMode": "Wybierz tryb widoku"
 }

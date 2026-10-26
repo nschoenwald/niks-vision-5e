@@ -7,7 +7,7 @@ export default (TokenConfig) => class extends TokenConfig {
             return;
         }
 
-        // Disable input fields that are automatically managed by Vision 5e
+        // Disable input fields that are automatically managed by Nik's Vision 5e
         for (const element of this.element.querySelectorAll(`[name="sight.range"]`)) {
             element.disabled = true;
             element.dataset.tooltip = "VISION5E.TOOLTIPS.AutomaticallyManaged";

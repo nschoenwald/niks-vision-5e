@@ -7,22 +7,19 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
     testVisibility(points, options = {}) {
         const object = options.object ?? null;
 
+        // The patched Token#_refreshVisibility resets Token#_detectionLevel to undefined, and only then
+        // the detection level and filter of the token are assigned here
+        const assignDetection = object instanceof Token && object._detectionLevel === undefined;
+
         if (!canvas.effects.visionSources.some((source) => source.active)) {
-            if (game.user.isGM) {
-                if (object instanceof Token && object._detectionLevel === undefined) {
-                    object._detectionLevel = DETECTION_LEVELS.PRECISE;
-                    object._detectionFilter = null;
-                }
+            const visible = game.user.isGM;
 
-                return true;
-            }
-
-            if (object instanceof Token && object._detectionLevel === undefined) {
-                object._detectionLevel = DETECTION_LEVELS.NONE;
+            if (assignDetection) {
+                object._detectionLevel = visible ? DETECTION_LEVELS.PRECISE : DETECTION_LEVELS.NONE;
                 object._detectionFilter = null;
             }
 
-            return false;
+            return visible;
         }
 
         if (game.release.generation >= 14 && !Array.isArray(points)) {
@@ -36,10 +33,8 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
                 continue;
             }
 
-            const result = lightSource.testVisibility(config);
-
-            if (result === true) {
-                if (object instanceof Token && object._detectionLevel === undefined) {
+            if (lightSource.testVisibility(config) === true) {
+                if (assignDetection) {
                     object._detectionLevel = DETECTION_LEVELS.PRECISE;
                     object._detectionFilter = null;
                 }
@@ -57,59 +52,69 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
             inBuffer = !sceneRect.contains(points.x, points.y);
         }
 
-        const detectionFilters = new Set();
-        let visible = false;
-        let detectionLevel = DETECTION_LEVELS.NONE;
-        const tests = [];
-        let numVisionSources = 0;
+        /** @type {DetectionTest[] | null} */
+        let tests = null;
+        let merged = false;
 
         for (const visionSource of canvas.effects.visionSources) {
             if (!visionSource.active || inBuffer === sceneRect.contains(visionSource.x, visionSource.y)) {
                 continue;
             }
 
-            const token = visionSource.object.document;
-            let hasDetectionMode = false;
+            const sourceTests = getDetectionTests(visionSource);
 
-            for (const [id, mode] of token._getDetectionModes()) {
-                const detectionMode = CONFIG.Canvas.detectionModes[id];
+            if (sourceTests.length === 0) {
+                continue;
+            }
 
-                if (detectionMode) {
-                    tests.push([detectionMode, visionSource, mode]);
-                    hasDetectionMode = true;
+            if (tests === null) {
+                // The tests of a single vision source are already sorted and can be used as is
+                tests = sourceTests;
+            } else {
+                if (!merged) {
+                    tests = tests.slice();
+                    merged = true;
+                }
+
+                for (let i = 0, n = sourceTests.length; i < n; i++) {
+                    tests.push(sourceTests[i]);
                 }
             }
+        }
 
-            if (hasDetectionMode) {
-                numVisionSources++;
+        if (tests === null) {
+            if (assignDetection) {
+                object._detectionLevel = DETECTION_LEVELS.NONE;
+                object._detectionFilter = null;
             }
+
+            return false;
         }
 
-        // The detection modes have been sorted by TokenDocument#prepareBaseData
-        if (numVisionSources >= 0) {
-            tests.sort(([detectionMode1, visionSource1], [detectionMode2, visionSource2]) => {
-                return (detectionMode2.important ?? false) - (detectionMode1.important ?? false)
-                    || (detectionMode1.imprecise ?? false) - (detectionMode2.imprecise ?? false)
-                    || (detectionMode2.id === visionSource2.object.document.sight.detectionMode) - (detectionMode1.id === visionSource1.object.document.sight.detectionMode)
-                    || (detectionMode1.sort ?? 0) - (detectionMode2.sort ?? 0);
-            });
+        if (merged) {
+            tests.sort(compareDetectionTests);
         }
 
-        for (const [detectionMode, visionSource, mode] of tests) {
-            const result = detectionMode.testVisibility(visionSource, mode, config);
+        /** @type {Set<PIXI.Filter> | null} */
+        let detectionFilters = null;
+        let visible = false;
+        let detectionLevel = DETECTION_LEVELS.NONE;
 
-            if (result !== true) {
+        for (let i = 0, n = tests.length; i < n; i++) {
+            const { detectionMode, visionSource, mode } = tests[i];
+
+            if (detectionMode.testVisibility(visionSource, mode, config) !== true) {
                 continue;
             }
 
             visible = true;
             detectionLevel = Math.max(detectionLevel, detectionMode.imprecise ? DETECTION_LEVELS.IMPRECISE : DETECTION_LEVELS.PRECISE);
 
-            if (object instanceof Token && object._detectionLevel === undefined) {
+            if (assignDetection) {
                 const detectionFilter = detectionMode.constructor.getDetectionFilter(visionSource, config);
 
                 if (detectionFilter) {
-                    detectionFilters.add(detectionFilter);
+                    (detectionFilters ??= new Set()).add(detectionFilter);
                 }
             }
 
@@ -118,30 +123,134 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
             }
         }
 
-        if (!visible) {
-            if (object instanceof Token && object._detectionLevel === undefined) {
-                object._detectionLevel = DETECTION_LEVELS.NONE;
+        if (assignDetection) {
+            object._detectionLevel = visible ? detectionLevel : DETECTION_LEVELS.NONE;
+
+            if (!visible || !detectionFilters) {
                 object._detectionFilter = null;
-            }
-
-            return false;
-        }
-
-        if (object instanceof Token && object._detectionLevel === undefined) {
-            object._detectionLevel = detectionLevel;
-
-            if (detectionFilters.size > 1) {
-                object._detectionFilter = new MultiDetectionFilter([...detectionFilters].reverse());
-            } else if (detectionFilters.size === 1) {
-                object._detectionFilter = detectionFilters.first();
+            } else if (detectionFilters.size > 1) {
+                object._detectionFilter = getMultiDetectionFilter([...detectionFilters].reverse());
             } else {
-                object._detectionFilter = null;
+                object._detectionFilter = detectionFilters.first();
             }
         }
 
-        return true;
+        return visible;
     }
 };
+
+/**
+ * @typedef {object} DetectionTest
+ * @property {foundry.canvas.perception.DetectionMode} detectionMode
+ * @property {foundry.canvas.sources.PointVisionSource} visionSource
+ * @property {{ range: number; enabled: boolean }} mode
+ * @property {number} rank    Important first, then precise, then the token's primary detection mode.
+ * @property {number} sort
+ */
+
+/**
+ * The sorted detection tests of vision sources keyed by the detection modes of the source's token.
+ * @type {WeakMap<object, { visionSource: foundry.canvas.sources.PointVisionSource; primary: string; tests: DetectionTest[] }>}
+ */
+const DETECTION_TESTS = new WeakMap();
+
+/**
+ * Invalidate the cached detection tests of the given detection modes.
+ * Must be called whenever the detection modes are modified in place.
+ * @param {object} detectionModes
+ */
+export function invalidateDetectionTests(detectionModes) {
+    DETECTION_TESTS.delete(detectionModes);
+}
+
+/**
+ * @param {DetectionTest} test1
+ * @param {DetectionTest} test2
+ * @returns {number}
+ */
+function compareDetectionTests(test1, test2) {
+    return test1.rank - test2.rank || test1.sort - test2.sort;
+}
+
+/**
+ * Get the sorted detection tests of the vision source.
+ * @param {foundry.canvas.sources.PointVisionSource} visionSource
+ * @returns {DetectionTest[]}
+ */
+function getDetectionTests(visionSource) {
+    const document = visionSource.object.document;
+    const detectionModes = document.detectionModes;
+    const primary = document.sight.detectionMode;
+    const cached = DETECTION_TESTS.get(detectionModes);
+
+    if (cached && cached.visionSource === visionSource && cached.primary === primary) {
+        return cached.tests;
+    }
+
+    const tests = [];
+
+    for (const [id, mode] of document._getDetectionModes()) {
+        const detectionMode = CONFIG.Canvas.detectionModes[id];
+
+        if (!detectionMode) {
+            continue;
+        }
+
+        tests.push({
+            detectionMode,
+            visionSource,
+            mode,
+            rank: (detectionMode.important ? 0 : 4) + (detectionMode.imprecise ? 2 : 0) + (detectionMode.id === primary ? 0 : 1),
+            sort: detectionMode.sort ?? 0,
+        });
+    }
+
+    tests.sort(compareDetectionTests);
+    DETECTION_TESTS.set(detectionModes, { visionSource, primary, tests });
+
+    return tests;
+}
+
+/** @type {WeakMap<PIXI.Filter, number>} */
+const FILTER_IDS = new WeakMap();
+
+/** @type {number} */
+let nextFilterId = 0;
+
+/** @type {Map<string, MultiDetectionFilter>} */
+const MULTI_DETECTION_FILTERS = new Map();
+
+/**
+ * Get the shared filter that applies all the given filters in order.
+ * @param {PIXI.Filter[]} filters
+ * @returns {MultiDetectionFilter}
+ */
+function getMultiDetectionFilter(filters) {
+    let key = "";
+
+    for (const filter of filters) {
+        let id = FILTER_IDS.get(filter);
+
+        if (id === undefined) {
+            FILTER_IDS.set(filter, id = nextFilterId++);
+        }
+
+        key += `${id},`;
+    }
+
+    let multiFilter = MULTI_DETECTION_FILTERS.get(key);
+
+    if (!multiFilter) {
+        if (MULTI_DETECTION_FILTERS.size >= 64) {
+            MULTI_DETECTION_FILTERS.clear();
+        }
+
+        multiFilter = new MultiDetectionFilter(filters);
+        MULTI_DETECTION_FILTERS.set(key, multiFilter);
+    }
+
+    return multiFilter;
+}
 
 class MultiDetectionFilter extends PIXI.Filter {
     /** @type {PIXI.Filter[]} */

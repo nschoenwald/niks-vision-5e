@@ -103,34 +103,7 @@ export default (Token) => class extends Token {
             return false;
         }
 
-        // A token that is defeated, petrified, or unconscious cannot perceive anything
-        const canPerceive = (token) => !token.document.hidden && token.hasSight
-            && !(token.document.hasStatusEffect(CONFIG.specialStatusEffects.DEFEATED)
-                || token.document.hasStatusEffect(CONFIG.specialStatusEffects.PETRIFIED)
-                || token.document.hasStatusEffect(CONFIG.specialStatusEffects.UNCONSCIOUS));
-
-        for (const user of isGM ? game.users : [game.user]) {
-            if (isGM && user.isGM) {
-                continue;
-            }
-
-            let controlled = this.layer.controlled;
-
-            if (isGM) {
-                controlled = controlled.filter((token) => !token.document.hidden && token.hasSight
-                    && token.actor?.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
-
-                if (controlled.length === 0) {
-                    continue;
-                }
-            }
-
-            // If the user controls that can perceive something, ...
-            if (controlled.some(canPerceive)) {
-                // ... this token is not a source of vision
-                continue;
-            }
-
+        for (const { user, hasUncontrolledPerceiver } of getSpectatorUsers(this.layer)) {
             // If the user has observer permissions, ...
             if (this.actor.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER)) {
                 // ... this token is a source of vision
@@ -138,8 +111,7 @@ export default (Token) => class extends Token {
             }
 
             // If the user is the owner or observer of a token that can perceive something but isn't controlling it, ...
-            if (this.layer.placeables.some((token) => !token.controlled && canPerceive(token)
-                && token.actor?.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER))) {
+            if (hasUncontrolledPerceiver) {
                 // ... this token is not a source of vision
                 continue;
             }
@@ -152,6 +124,36 @@ export default (Token) => class extends Token {
         }
 
         return false;
+    }
+
+    /** @override */
+    _onControl(options) {
+        invalidateSpectatorUsers();
+        super._onControl(options);
+    }
+
+    /** @override */
+    _onRelease(options) {
+        invalidateSpectatorUsers();
+        super._onRelease(options);
+    }
+
+    /** @override */
+    _onCreate(data, options, userId) {
+        invalidateSpectatorUsers();
+        super._onCreate(data, options, userId);
+    }
+
+    /** @override */
+    _onUpdate(changed, options, userId) {
+        invalidateSpectatorUsers();
+        super._onUpdate(changed, options, userId);
+    }
+
+    /** @override */
+    _onDelete(options, userId) {
+        invalidateSpectatorUsers();
+        super._onDelete(options, userId);
     }
 
     /** @override */
@@ -238,6 +240,8 @@ export default (Token) => class extends Token {
 
     /** @override */
     _onApplyStatusEffect(statusId, active) {
+        invalidateSpectatorUsers();
+
         if (statusId === CONFIG.specialStatusEffects.BLEEDING
             || statusId === CONFIG.specialStatusEffects.DISEASED
             || statusId === CONFIG.specialStatusEffects.INAUDIBLE
@@ -260,7 +264,7 @@ export default (Token) => class extends Token {
                 || (!game.user.isGM && this.actor?.testUserPermission(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER)
                     || game.user.isGM && this.layer.controlled.length !== 0))) {
                 for (const token of this.layer.placeables) {
-                    if (token !== this && !token.vision === token._isVisionSource()) {
+                    if (token !== this && !!token.vision !== token._isVisionSource()) {
                         token.initializeVisionSource();
                     }
                 }
@@ -448,3 +452,86 @@ export default (Token) => class extends Token {
  * @type {[detectionFilter: PIXI.Filter | null]}
  */
 const detectionFilterArray = [null];
+
+/**
+ * A token that is defeated, petrified, or unconscious cannot perceive anything.
+ * @param {Token} token
+ * @returns {boolean}
+ */
+function canPerceive(token) {
+    return !token.document.hidden && token.hasSight
+        && !(token.document.hasStatusEffect(CONFIG.specialStatusEffects.DEFEATED)
+            || token.document.hasStatusEffect(CONFIG.specialStatusEffects.PETRIFIED)
+            || token.document.hasStatusEffect(CONFIG.specialStatusEffects.UNCONSCIOUS));
+}
+
+/**
+ * @typedef {object} SpectatorUser
+ * @property {User} user                         The user whose vision might be spectated.
+ * @property {boolean} hasUncontrolledPerceiver  Does the user observe a token that can perceive but isn't controlled?
+ */
+
+/**
+ * The users that are relevant for Spectator Mode, which is the same for all tokens during a vision update.
+ * @type {{ layer: foundry.canvas.layers.TokenLayer; users: SpectatorUser[] } | null}
+ */
+let spectatorUsers = null;
+
+/**
+ * Invalidate the cached Spectator Mode users.
+ */
+export function invalidateSpectatorUsers() {
+    spectatorUsers = null;
+}
+
+/**
+ * Get the users that are relevant for Spectator Mode. Users that control a token that can perceive something
+ * are excluded, because their tokens' vision is not spectated. The result is cached until the current task ends
+ * or until the cache is invalidated by a change of control, tokens, actors, or statuses.
+ * @param {foundry.canvas.layers.TokenLayer} layer
+ * @returns {SpectatorUser[]}
+ */
+function getSpectatorUsers(layer) {
+    if (spectatorUsers?.layer === layer) {
+        return spectatorUsers.users;
+    }
+
+    queueMicrotask(invalidateSpectatorUsers);
+
+    const isGM = game.user.isGM;
+    const controlled = layer.controlled;
+    const placeables = layer.placeables;
+    const users = [];
+
+    for (const user of isGM ? game.users : [game.user]) {
+        if (isGM && user.isGM) {
+            continue;
+        }
+
+        let userControlled = controlled;
+
+        if (isGM) {
+            userControlled = controlled.filter((token) => !token.document.hidden && token.hasSight
+                && token.actor?.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+
+            if (userControlled.length === 0) {
+                continue;
+            }
+        }
+
+        // If the user controls a token that can perceive something, no other token is a source of vision for this user
+        if (userControlled.some(canPerceive)) {
+            continue;
+        }
+
+        users.push({
+            user,
+            hasUncontrolledPerceiver: placeables.some((token) => !token.controlled && canPerceive(token)
+                && token.actor?.testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OBSERVER)),
+        });
+    }
+
+    spectatorUsers = { layer, users };
+
+    return users;
+}
