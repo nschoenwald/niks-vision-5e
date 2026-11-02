@@ -436,7 +436,7 @@ Nik's Vision 5e is based on [Vision 5e](https://github.com/dev7355608/vision-5e)
 
 ---
 
-## Other Modules by Nik
+## Modules by Nik
 
 ### 🎲 D&D 5e Specific
 * **[Nik's DnD5e Tweaks](https://github.com/nschoenwald/niks-dnd5e-tweaks)** – Consolidated collection of quality-of-life enhancements and combat automation tweaks for DnD5e.
