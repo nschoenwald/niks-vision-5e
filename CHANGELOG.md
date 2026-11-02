@@ -1,5 +1,10 @@
 # Changelog
 
+## 14.1.0
+
+- New translations: Italian and Japanese. The module is now available in nine languages.
+- Language names in Foundry's language list are now shown in their own language.
+
 ## 14.0.0
 
 **Nik's Vision 5e** is a fork of Vision 5e by dev7355608. It has a new module ID (`niks-vision-5e`), so disable the original Vision 5e module and set the module settings (Default Hearing Range, Spectator Mode) again after switching.

@@ -422,6 +422,14 @@ The module's interface is also translated into Polish and Czech, but feat and ef
 
 ---
 
+## Languages
+
+English, Deutsch, Français, Español, Italiano, Português (Brasil), 日本語, Polski and Čeština.
+
+The Italian and Japanese translations were written with AI help and may contain mistakes. Corrections are welcome as an issue or pull request.
+
+---
+
 ## Credits
 
 Nik's Vision 5e is based on [Vision 5e](https://github.com/dev7355608/vision-5e) by **dev7355608**, licensed under MIT. Thank you for the excellent original module!

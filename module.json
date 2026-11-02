@@ -8,7 +8,7 @@
       "email": "dev7355608@gmail.com"
     }
   ],
-  "version": "14.0.0",
+  "version": "14.1.0",
   "compatibility": {
     "minimum": "13",
     "verified": "14"
@@ -27,32 +27,42 @@
     },
     {
       "lang": "de",
-      "name": "German",
+      "name": "Deutsch",
       "path": "lang/de.json"
     },
     {
       "lang": "fr",
-      "name": "French",
+      "name": "Français",
       "path": "lang/fr.json"
     },
     {
       "lang": "es",
-      "name": "Spanish",
+      "name": "Español",
       "path": "lang/es.json"
     },
     {
+      "lang": "it",
+      "name": "Italiano",
+      "path": "lang/it.json"
+    },
+    {
       "lang": "pt-BR",
-      "name": "Portuguese (Brazil)",
+      "name": "Português (Brasil)",
       "path": "lang/pt-BR.json"
     },
     {
+      "lang": "ja",
+      "name": "日本語",
+      "path": "lang/ja.json"
+    },
+    {
       "lang": "pl",
-      "name": "Polish",
+      "name": "Polski",
       "path": "lang/pl.json"
     },
     {
       "lang": "cs",
-      "name": "Czech",
+      "name": "Čeština",
       "path": "lang/cs.json"
     }
   ],
