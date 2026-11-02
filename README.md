@@ -424,7 +424,7 @@ The module's interface is also translated into Polish and Czech, but feat and ef
 
 ## Languages
 
-English, Deutsch, Français, Español, Italiano, Português (Brasil), 日本語, Polski and Čeština.
+🇬🇧 English · 🇩🇪 Deutsch · 🇫🇷 Français · 🇪🇸 Español · 🇮🇹 Italiano · 🇧🇷 Português (Brasil) · 🇯🇵 日本語 · 🇵🇱 Polski · 🇨🇿 Čeština
 
 The Italian and Japanese translations were written with AI help and may contain mistakes. Corrections are welcome as an issue or pull request.
 
