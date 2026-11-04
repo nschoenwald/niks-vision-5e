@@ -1,5 +1,9 @@
 # Changelog
 
+## 14.1.1
+
+- Removed the Italian and Japanese translations. They were machine-translated and never checked by a native speaker. Players who use Foundry in one of these languages now see this module in English. Translations by native speakers are welcome as an issue or pull request.
+
 ## 14.1.0
 
 - New translations: Italian and Japanese. The module is now available in nine languages.

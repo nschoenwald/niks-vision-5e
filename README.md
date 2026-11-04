@@ -424,9 +424,9 @@ The module's interface is also translated into Polish and Czech, but feat and ef
 
 ## Languages
 
-🇬🇧 English · 🇩🇪 Deutsch · 🇫🇷 Français · 🇪🇸 Español · 🇮🇹 Italiano · 🇧🇷 Português (Brasil) · 🇯🇵 日本語 · 🇵🇱 Polski · 🇨🇿 Čeština
+🇬🇧 English · 🇩🇪 Deutsch · 🇫🇷 Français · 🇪🇸 Español · 🇧🇷 Português (Brasil) · 🇵🇱 Polski · 🇨🇿 Čeština
 
-The Italian and Japanese translations were written with AI help and may contain mistakes. Corrections are welcome as an issue or pull request.
+Translations into other languages by native speakers are welcome as an issue or pull request.
 
 ---
 
