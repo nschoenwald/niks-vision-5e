@@ -438,6 +438,9 @@ Nik's Vision 5e is based on [Vision 5e](https://github.com/dev7355608/vision-5e)
 
 ## Modules by Nik
 
+### 🧩 Nik's Tweaks
+* **[Nik's Foundry Tweaks](https://github.com/nschoenwald/niks-foundry-tweaks)** – System-independent quality-of-life tweaks and the shared settings dashboard of Nik's Tweaks modules.
+
 ### 🎲 D&D 5e Specific
 * **[Nik's DnD5e Tweaks](https://github.com/nschoenwald/niks-dnd5e-tweaks)** – Consolidated collection of quality-of-life enhancements and combat automation tweaks for DnD5e.
 
