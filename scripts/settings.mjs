@@ -80,20 +80,6 @@ Hooks.once("i18nInit", () => {
     spectatorModeField.hint = game.i18n.localize("VISION5E.SETTINGS.spectatorMode.hint");
 });
 
-Hooks.once("setup", () => {
-    if (game.release.generation >= 14 || !game.user.isGM) {
-        return;
-    }
-
-    Hooks.on("renderSettingsConfig", (application, element, context, options) => {
-        if (!options.parts.includes("main")) {
-            return;
-        }
-
-        element.querySelector(`input[name="niks-vision-5e.defaultHearingRange"]`).placeholder = "0";
-    });
-});
-
 Hooks.once("ready", () => {
     if (!game.user.isGM) {
         return;
@@ -102,13 +88,7 @@ Hooks.once("ready", () => {
     const content = window.document.createElement("div");
 
     if (!game.settings.storage.get("world").some((setting) => setting.key === "niks-vision-5e.defaultHearingRange")) {
-        const inputConfig = { name: "defaultHearingRange" };
-
-        if (game.release.generation === 13) {
-            inputConfig.placeholder = "0";
-        }
-
-        content.append(defaultHearingRangeField.toFormGroup({}, inputConfig));
+        content.append(defaultHearingRangeField.toFormGroup({}, { name: "defaultHearingRange" }));
     }
 
     if (!game.settings.storage.get("world").some((setting) => setting.key === "niks-vision-5e.spectatorMode")) {

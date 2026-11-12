@@ -114,11 +114,7 @@ export default (TokenDocument) => class extends TokenDocument {
      * @internal
      */
     _getDetectionMode(id) {
-        if (game.release.generation >= 14) {
-            return this.detectionModes[id];
-        } else {
-            return this.detectionModes.find((mode) => mode.id === id);
-        }
+        return this.detectionModes[id];
     }
 
     /**
@@ -131,11 +127,7 @@ export default (TokenDocument) => class extends TokenDocument {
         invalidateDetectionTests(this.detectionModes);
         invalidatePreciseSightModes(this.detectionModes);
 
-        if (game.release.generation >= 14) {
-            this.detectionModes[id] = { range, enabled };
-        } else {
-            this.detectionModes.push({ id, range, enabled });
-        }
+        this.detectionModes[id] = { range, enabled };
     }
 
     /**
@@ -144,11 +136,7 @@ export default (TokenDocument) => class extends TokenDocument {
      * @internal
      */
     _hasDetectionMode(id) {
-        if (game.release.generation >= 14) {
-            return id in this.detectionModes;
-        } else {
-            return this.detectionModes.some((mode) => mode.id === id);
-        }
+        return id in this.detectionModes;
     }
 
     /**
@@ -156,24 +144,12 @@ export default (TokenDocument) => class extends TokenDocument {
      * @internal
      */
     * _getDetectionModes() {
-        if (game.release.generation >= 14) {
-            for (const [id, mode] of Object.entries(this.detectionModes)) {
-                yield [id, mode];
-            }
-        } else {
-            for (const mode of this.detectionModes) {
-                yield [mode.id, mode];
-            }
-        }
+        yield* Object.entries(this.detectionModes);
     }
 
     /** @internal */
     _clearDetectionModes() {
-        if (game.release.generation >= 14) {
-            this.detectionModes = {};
-        } else {
-            this.detectionModes = [];
-        }
+        this.detectionModes = {};
     }
 
     /**
@@ -181,18 +157,12 @@ export default (TokenDocument) => class extends TokenDocument {
      * @internal
      */
     _filterDetectionModes(condition) {
-        let detectionModes;
+        const detectionModes = {};
 
-        if (game.release.generation >= 14) {
-            detectionModes = {};
-
-            for (const [id, mode] of Object.entries(this.detectionModes)) {
-                if (condition(id, mode.range, mode.enabled)) {
-                    detectionModes[id] = mode;
-                }
+        for (const [id, mode] of Object.entries(this.detectionModes)) {
+            if (condition(id, mode.range, mode.enabled)) {
+                detectionModes[id] = mode;
             }
-        } else {
-            detectionModes = this.detectionModes.filter((mode) => condition(mode.id, mode.range, mode.enabled));
         }
 
         this.detectionModes = detectionModes;

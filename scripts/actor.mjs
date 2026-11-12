@@ -13,7 +13,7 @@ export default (Actor) => class extends Actor {
 
         super.prepareData();
 
-        if (!detectionModes || objectsEqual(this.detectionModes, detectionModes)
+        if (!detectionModes || foundry.utils.equals(this.detectionModes, detectionModes)
             && wasEthereal === this.statuses.has(CONFIG.specialStatusEffects.ETHEREAL)) {
             return;
         }
@@ -66,12 +66,8 @@ export default (Actor) => class extends Actor {
 
         this.detectionModes = { lightPerception: Infinity };
 
-        let senses = this.system.attributes?.senses;
-        const units = senses?.units;
-
-        if (sensesHaveRanges()) {
-            senses = senses?.ranges;
-        }
+        const units = this.system.attributes?.senses?.units;
+        const senses = this.system.attributes?.senses?.ranges;
 
         if (senses) {
             this.detectionModes.basicSight = senses.darkvision;
@@ -150,26 +146,6 @@ export default (Actor) => class extends Actor {
         }
     }
 };
-
-/**
- * @param {object} a
- * @param {object} b
- * @returns {boolean}
- */
-function objectsEqual(a, b) {
-    return game.release.generation >= 14 ? foundry.utils.equals(a, b) : foundry.utils.objectsEqual(a, b);
-}
-
-/** @type {boolean | undefined} */
-let _sensesHaveRanges;
-
-/**
- * Since D&D 5e 5.3.0 the sense ranges are stored in `senses.ranges`.
- * @returns {boolean}
- */
-function sensesHaveRanges() {
-    return _sensesHaveRanges ??= !foundry.utils.isNewerVersion("5.3.0", game.system.version);
-}
 
 /**
  * Evaluated hearing ranges keyed by the formula after roll data substitution.

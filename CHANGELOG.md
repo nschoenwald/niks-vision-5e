@@ -1,5 +1,10 @@
 # Changelog
 
+## 14.3.0
+
+- **Now requires Foundry VTT V14 (build 14.370 or newer) and D&D 5e 6.1.0 or newer.** Support for Foundry V13 and older D&D 5e versions has ended. Stay on 14.2.2 if your world still runs on one of them.
+- Nothing changes in how vision works on V14 with D&D 5e 6.1.
+
 ## 14.2.2
 
 - **Faster vision with Detect Magic, See Invisibility, Ethereal Sight and Witch Sight.** Scenes with many magical, invisible or ethereal creatures stay smoother while tokens move, especially when a caster has Detect Magic active.

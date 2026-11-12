@@ -8,9 +8,9 @@
       "email": "dev7355608@gmail.com"
     }
   ],
-  "version": "14.2.2",
+  "version": "14.3.0",
   "compatibility": {
-    "minimum": "13",
+    "minimum": "14.370",
     "verified": "14",
     "maximum": "14"
   },
@@ -63,7 +63,7 @@
         "id": "dnd5e",
         "type": "system",
         "compatibility": {
-          "minimum": "5.0.0",
+          "minimum": "6.1.0",
           "verified": "6.1.0"
         }
       }

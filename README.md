@@ -1,7 +1,7 @@
 # Nik's Vision 5e
 
-[![Foundry VTT](https://img.shields.io/badge/Foundry%20VTT-V13%20%E2%80%93%20V14-orange.svg)](https://foundryvtt.com)
-[![DnD5e System](https://img.shields.io/badge/DnD5e-5.0%20%E2%80%93%206.x-blue.svg)](https://github.com/foundryvtt/dnd5e)
+[![Foundry VTT](https://img.shields.io/badge/Foundry%20VTT-V14-orange.svg)](https://foundryvtt.com)
+[![DnD5e System](https://img.shields.io/badge/DnD5e-6.1%2B-blue.svg)](https://github.com/foundryvtt/dnd5e)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/nschoenwald/niks-vision-5e?color=purple)](https://github.com/nschoenwald/niks-vision-5e/releases/latest)
 
@@ -25,13 +25,12 @@ https://github.com/nschoenwald/niks-vision-5e/releases/latest/download/module.js
 
 ## Compatibility
 
-- **Foundry VTT:** V13 – V14 (verified on V14)
-- **Game System:** D&D 5e 5.0 – 6.x (verified on 6.1.0), both the 2024 rules and the legacy (2014) rules
+- **Foundry VTT:** V14, build 14.370 or newer
+- **Game System:** D&D 5e 6.1.0 or newer, both the 2024 rules and the legacy (2014) rules
 - **Module integrations:**
   - [Item Piles](https://foundryvtt.com/packages/item-piles): piles, containers, and vaults are treated as inaudible objects.
   - [Ember](https://foundryvtt.com/packages/ember): the actor flag `flags.ember.warmBlooded` decides whether Thermal Vision sees a creature.
   - [Limits](https://foundryvtt.com/packages/limits): vision sources tell Limits which sense they represent.
-  - [Active Token Effects](https://foundryvtt.com/packages/ATL): only needed on V13 to change detection ranges with active effects (see [Active Effects](#active-effects)).
 
 ---
 
@@ -305,7 +304,7 @@ PCs with the `Ghostly Gaze` effect (Eldritch Invocation, XGE 56), also written a
 
 The available vision modes are **Blindsight**, **Darkvision**, **Devil's Sight**, and **Truesight**. A token keeps the vision mode selected for it as long as it has that sense. Otherwise it uses the mode with the longest range.
 
-If a token has two or more of these senses, its owner can switch between them in the Token HUD (<img alt="glasses icon" src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.x/svgs/solid/glasses.svg" width="16px" height="16px" style="filter: invert(100%);">). On V13, the button shows an eye icon (<img alt="eye icon" src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.x/svgs/solid/eye.svg" width="16px" height="16px" style="filter: invert(100%);">) instead. The picker is hidden if an active effect sets the vision mode.
+If a token has two or more of these senses, its owner can switch between them in the Token HUD (<img alt="glasses icon" src="https://raw.githubusercontent.com/FortAwesome/Font-Awesome/7.x/svgs/solid/glasses.svg" width="16px" height="16px" style="filter: invert(100%);">). The picker is hidden if an active effect sets the vision mode.
 
 _Ethereal_ creatures automatically use a grayscale **Etherealness** vision mode.
 
@@ -364,11 +363,6 @@ Change detection ranges with active effects using these attribute keys:
 | Tremorsense | `system.attributes.senses.ranges.tremorsense` |
 | Truesight | `system.attributes.senses.ranges.truesight` |
 | Witch Sight | `token.detectionModes.witchSight.range` |
-
-_Older versions:_
-
-- On Foundry V13, replace `token.` with `ATL.` (requires [Active Token Effects](https://foundryvtt.com/packages/ATL)).
-- With D&D 5e before 5.3.0, replace `.senses.ranges.` with `.senses.`.
 
 ---
 

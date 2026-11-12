@@ -24,7 +24,7 @@ export default (TokenHUD) => class extends TokenHUD {
 
             const i = document.createElement("i");
 
-            i.classList.add("fa-solid", game.release.generation >= 14 ? "fa-glasses" : "fa-eye");
+            i.classList.add("fa-solid", "fa-glasses");
             i.inert = true;
 
             button.append(i);

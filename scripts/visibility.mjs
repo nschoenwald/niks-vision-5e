@@ -22,7 +22,7 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
             return visible;
         }
 
-        if (game.release.generation >= 14 && !Array.isArray(points)) {
+        if (!Array.isArray(points)) {
             points = [points];
         }
 
@@ -44,13 +44,7 @@ export default (CanvasVisibility) => class extends CanvasVisibility {
         }
 
         const sceneRect = canvas.dimensions.sceneRect;
-        let inBuffer;
-
-        if (game.release.generation >= 14) {
-            inBuffer = points.every((point) => !sceneRect.contains(point.x, point.y));
-        } else {
-            inBuffer = !sceneRect.contains(points.x, points.y);
-        }
+        const inBuffer = points.every((point) => !sceneRect.contains(point.x, point.y));
 
         /** @type {DetectionTest[] | null} */
         let tests = null;

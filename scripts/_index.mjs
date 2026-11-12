@@ -31,7 +31,6 @@ import VisionModeDarkvision from "./vision-modes/darkvision.mjs";
 import VisionModeDevilsSight from "./vision-modes/devils-sight.mjs";
 import VisionModeEtherealness from "./vision-modes/etherealness.mjs";
 import VisionModeTruesight from "./vision-modes/truesight.mjs";
-import { DETECTION_LEVELS } from "./const.mjs";
 
 Hooks.once("init", () => {
     // Extend Actor, TokenDocument, Token, and TokenHUD
@@ -47,13 +46,7 @@ Hooks.once("init", () => {
     CONFIG.Canvas.visionSourceClass = VisionSourceMixin(CONFIG.Canvas.visionSourceClass);
 
     // Extend CombatTracker
-    if (game.release.generation >= 14) {
-        CONFIG.ui.combat = CombatTrackerMixin(CONFIG.ui.combat);
-    } else {
-        CONFIG.ui.combat.prototype._isTokenVisible = function (token) {
-            return token.detectionLevel === DETECTION_LEVELS.PRECISE;
-        };
-    }
+    CONFIG.ui.combat = CombatTrackerMixin(CONFIG.ui.combat);
 
     // Register the Inaudible status effect
     CONFIG.DND5E.conditionTypes.inaudible = {

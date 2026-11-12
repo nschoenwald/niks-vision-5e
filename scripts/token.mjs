@@ -56,7 +56,7 @@ export default (Token) => class extends Token {
         }
 
         // Only tokens in the viewed level can see
-        if (game.release.generation >= 14 && this.document.level !== canvas.level.id) {
+        if (this.document.level !== canvas.level.id) {
             return false;
         }
 
@@ -307,24 +307,14 @@ export default (Token) => class extends Token {
             this.#impreciseMesh.renderable = false;
         }
 
-        if (game.release.generation >= 14) {
-            this.#impreciseChildren = [
-                this.border,
-                this.detectionFilterMesh,
-                this.tooltip,
-                this.levelIndicator,
-                this.targetArrows,
-                this.targetPips,
-            ];
-        } else {
-            this.#impreciseChildren = [
-                this.border,
-                this.detectionFilterMesh,
-                this.tooltip,
-                this.targetArrows,
-                this.targetPips,
-            ];
-        }
+        this.#impreciseChildren = [
+            this.border,
+            this.detectionFilterMesh,
+            this.tooltip,
+            this.levelIndicator,
+            this.targetArrows,
+            this.targetPips,
+        ];
     }
 
     /** @override */

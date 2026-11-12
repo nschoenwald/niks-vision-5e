@@ -3,6 +3,16 @@ import DetectionMode from "./base.mjs";
 const { Token } = foundry.canvas.placeables;
 
 /**
+ * The collision configuration of sound.
+ * @type {Partial<foundry.canvas.geometry.types.PointSourcePolygonConfig>}
+ */
+const SOUND_COLLISION_CONFIG = {
+    type: "sound",
+    edgeDirectionMode: CONST.EDGE_DIRECTION_MODES.REVERSED,
+    useThreshold: true,
+};
+
+/**
  * The detection mode for hearing.
  */
 export default class DetectionModeHearing extends DetectionMode {
@@ -48,35 +58,9 @@ export default class DetectionModeHearing extends DetectionMode {
         return true;
     }
 
-    /**
-     * The collision configuration of sound, created on first use.
-     * @type {Partial<foundry.canvas.geometry.types.PointSourcePolygonConfig> | undefined}
-     */
-    static #collisionConfig;
-
     /** @override */
     _testLOS(visionSource, mode, target, test) {
-        let config = DetectionModeHearing.#collisionConfig;
-
-        if (!config) {
-            if (game.release.generation >= 14) {
-                config = {
-                    type: "sound",
-                    edgeDirectionMode: CONST.EDGE_DIRECTION_MODES.REVERSED,
-                    useThreshold: true,
-                };
-            } else {
-                config = {
-                    type: "sound",
-                    wallDirectionMode: foundry.canvas.geometry.PointSourcePolygon.WALL_DIRECTION_MODES.REVERSED,
-                    useThreshold: true,
-                };
-            }
-
-            DetectionModeHearing.#collisionConfig = config;
-        }
-
-        return !this.constructor._testCollision(visionSource, test, config);
+        return !this.constructor._testCollision(visionSource, test, SOUND_COLLISION_CONFIG);
     }
 }
 
@@ -129,27 +113,6 @@ class PingDetectionFilter extends foundry.canvas.rendering.filters.AbstractBaseF
                 gl_FragColor = vec4(color, 1.0) * alpha * wcos(0.0, 1.0, dist * 75.0, -time * 0.01 + 3.0 * step(dist, 1.0)) * (1.0 - dist);
             }
         `;
-    }
-
-    static {
-        Hooks.once("init", () => {
-            if (game.release.generation >= 14) {
-                return;
-            }
-
-            Object.defineProperties(PingDetectionFilter, {
-                vertexShader: {
-                    get() {
-                        return this._createVertexShader();
-                    },
-                },
-                fragmentShader: {
-                    get() {
-                        return this._createFragmentShader();
-                    },
-                },
-            });
-        });
     }
 
     /** @override */

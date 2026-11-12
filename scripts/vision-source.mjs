@@ -42,7 +42,7 @@ export default (PointVisionSource) => class extends PointVisionSource {
 
             let surfaceExposure;
 
-            if (game.release.generation >= 14 && this.data.unconstrainedRadius > 0) {
+            if (this.data.unconstrainedRadius > 0) {
                 surfaceExposure = config.surfaceExposure;
                 config.surfaceExposure = { threshold: 0 };
             }
@@ -102,7 +102,7 @@ export default (PointVisionSource) => class extends PointVisionSource {
 
         let surfaceExposure;
 
-        if (game.release.generation >= 14 && this.data.unconstrainedRadius > 0) {
+        if (this.data.unconstrainedRadius > 0) {
             surfaceExposure = config.surfaceExposure;
             config.surfaceExposure = { threshold: 0 };
         }
@@ -119,23 +119,16 @@ export default (PointVisionSource) => class extends PointVisionSource {
             config.radius = Math.min(this.data.unconstrainedRadius, this.los.config.radius);
             config.edgeTypes = foundry.utils.deepClone(this.los.config.edgeTypes);
 
-            if (game.release.generation >= 14) {
-                config.surfaceExposure = { threshold: 0 };
-                config.edgeTypes.wall = { mode: 0, priority: -Infinity };
-            } else {
-                config.type = "universal";
-                delete config.edgeTypes.wall;
-            }
+            config.surfaceExposure = { threshold: 0 };
+            config.edgeTypes.wall = { mode: 0, priority: -Infinity };
 
             this.los.points = polygonClass.create(this.origin, config).intersectPolygon(this.los,
                 { clipType: ClipperLib.ClipType.ctUnion, scalingFactor: CONST.CLIPPER_SCALING_FACTOR }).points;
             this.los.bounds = this.los.getBounds();
 
-            if (game.release.generation >= 14) {
-                this.los.config.surfaceExposure = surfaceExposure;
-                this.los.surfaceExposure = foundry.canvas.geometry.ElevatedSurfaceExposureGenerator.compute(
-                    this.los, surfaceExposure);
-            }
+            this.los.config.surfaceExposure = surfaceExposure;
+            this.los.surfaceExposure = foundry.canvas.geometry.ElevatedSurfaceExposureGenerator.compute(
+                this.los, surfaceExposure);
         }
 
         this.light = this._createLightPolygon();
@@ -177,15 +170,7 @@ export default (PointVisionSource) => class extends PointVisionSource {
      */
     #isSourceEdgeInLOS() {
         if (this.#sourceEdgeInLOS === undefined) {
-            let type;
-
-            if (game.release.generation >= 14) {
-                type = "source";
-            } else {
-                type = "darkness";
-            }
-
-            this.#sourceEdgeInLOS = this.los.edges.some((edge) => edge.type === type);
+            this.#sourceEdgeInLOS = this.los.edges.some((edge) => edge.type === "source");
         }
 
         return this.#sourceEdgeInLOS;
