@@ -26,7 +26,7 @@ https://github.com/nschoenwald/niks-vision-5e/releases/latest/download/module.js
 ## Compatibility
 
 - **Foundry VTT:** V13 – V14 (verified on V14)
-- **Game System:** D&D 5e 5.0 – 6.x (verified on 6.0.6), both the 2024 rules and the legacy (2014) rules
+- **Game System:** D&D 5e 5.0 – 6.x (verified on 6.1.0), both the 2024 rules and the legacy (2014) rules
 - **Module integrations:**
   - [Item Piles](https://foundryvtt.com/packages/item-piles): piles, containers, and vaults are treated as inaudible objects.
   - [Ember](https://foundryvtt.com/packages/ember): the actor flag `flags.ember.warmBlooded` decides whether Thermal Vision sees a creature.
