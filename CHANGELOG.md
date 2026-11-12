@@ -1,10 +1,10 @@
 # Changelog
 
-## 14.1.3
+## 14.2.1
 
 - Verified with D&D 5e 6.1. Nothing changes in how the module works.
 
-## 14.1.2
+## 14.2.0
 
 - The French translation was reviewed by Kameleau, with small corrections (Blindsense is now *Vision Aveugle*). Thank you!
 
