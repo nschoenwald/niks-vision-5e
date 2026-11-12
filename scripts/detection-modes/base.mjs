@@ -6,6 +6,40 @@ import { DETECTION_LEVELS } from "../const.mjs";
  */
 const SINGLE_VISION_SOURCE = new foundry.utils.Collection();
 
+/**
+ * The precise sight detection modes of a token, keyed by the token document's detection modes and then by the
+ * detection mode that tests precise sight. Reusing the same filtered object lets the nested visibility test hit
+ * the cached detection tests instead of rebuilding and sorting them for every test point.
+ * @type {WeakMap<object, Map<foundry.canvas.perception.DetectionMode, object>>}
+ */
+const PRECISE_SIGHT_MODES = new WeakMap();
+
+/**
+ * Invalidate the cached precise sight detection modes derived from the given detection modes.
+ * Must be called whenever the detection modes are modified in place.
+ * @param {object} detectionModes
+ */
+export function invalidatePreciseSightModes(detectionModes) {
+    PRECISE_SIGHT_MODES.delete(detectionModes);
+}
+
+/**
+ * The collision configuration of sight that is blocked by walls but not by darkness.
+ * @type {Partial<foundry.canvas.geometry.types.PointSourcePolygonConfig>}
+ */
+const UNOBSTRUCTED_SIGHT_CONFIG = {
+    type: "sight",
+    useThreshold: true,
+    priority: Infinity,
+};
+
+/**
+ * The results of the unobstructed sight test keyed by the test and then by the vision source.
+ * Several detection modes of the same vision source share the same result for a test point.
+ * @type {WeakMap<foundry.types.CanvasVisibilityTest, Map<foundry.canvas.sources.PointVisionSource, boolean>>}
+ */
+const UNOBSTRUCTED_SIGHT_RESULTS = new WeakMap();
+
 export default class extends foundry.canvas.perception.DetectionMode {
     /** @override */
     static defineSchema() {
@@ -59,11 +93,11 @@ export default class extends foundry.canvas.perception.DetectionMode {
 
                 const { angle = 360, rotation = 0, externalRadius = 0 } = config;
 
-                if (angle < 360 || externalRadius > 0) {
+                if (angle < 360) {
                     const dx = destination.x - origin.x;
                     const dy = destination.y - origin.y;
 
-                    if (dx * dx + dy * dy <= externalRadius * externalRadius) {
+                    if (dx * dx + dy * dy > externalRadius * externalRadius) {
                         if (angle <= 0) {
                             return true;
                         }
@@ -84,6 +118,31 @@ export default class extends foundry.canvas.perception.DetectionMode {
                 return CONFIG.Canvas.polygonBackends[type].testCollision(origin, destination, config);
             };
         });
+    }
+
+    /**
+     * Test whether the line of sight from the vision source to the test point is not blocked by walls
+     * that block sight. Darkness does not block it. The result is cached for the test and vision source.
+     * @param {foundry.canvas.sources.PointVisionSource} visionSource
+     * @param {foundry.types.CanvasVisibilityTest} test
+     * @returns {boolean}
+     * @protected
+     */
+    _testUnobstructedSight(visionSource, test) {
+        let results = UNOBSTRUCTED_SIGHT_RESULTS.get(test);
+
+        if (!results) {
+            UNOBSTRUCTED_SIGHT_RESULTS.set(test, results = new Map());
+        }
+
+        let result = results.get(visionSource);
+
+        if (result === undefined) {
+            result = !this.constructor._testCollision(visionSource, test, UNOBSTRUCTED_SIGHT_CONFIG);
+            results.set(visionSource, result);
+        }
+
+        return result;
     }
 
     /**
@@ -114,11 +173,24 @@ export default class extends foundry.canvas.perception.DetectionMode {
             // Prevent the nested test from assigning the detection level and filter of the target
             target._detectionLevel = DETECTION_LEVELS.NONE;
 
-            document._filterDetectionModes((id) => {
-                const mode = CONFIG.Canvas.detectionModes[id];
+            let preciseSightModes = PRECISE_SIGHT_MODES.get(detectionModes);
 
-                return mode && mode !== this && mode.type === this.constructor.DETECTION_TYPES.SIGHT && !mode.imprecise;
-            });
+            if (!preciseSightModes) {
+                PRECISE_SIGHT_MODES.set(detectionModes, preciseSightModes = new Map());
+            }
+
+            const filteredModes = preciseSightModes.get(this);
+
+            if (filteredModes) {
+                document.detectionModes = filteredModes;
+            } else {
+                document._filterDetectionModes((id) => {
+                    const mode = CONFIG.Canvas.detectionModes[id];
+
+                    return mode && mode !== this && mode.type === this.constructor.DETECTION_TYPES.SIGHT && !mode.imprecise;
+                });
+                preciseSightModes.set(this, document.detectionModes);
+            }
 
             for (const statusId of ignoredStatuses) {
                 if (statuses?.delete(statusId)) {

@@ -59,14 +59,6 @@ export default class DetectionModeDivineSense extends DetectionMode {
 
     /** @override */
     _testLOS(visionSource, mode, target, test) {
-        return !(this.walls && this.constructor._testCollision(
-            visionSource,
-            test,
-            {
-                type: "sight",
-                useThreshold: true,
-                priority: Infinity,
-            },
-        ));
+        return !this.walls || this._testUnobstructedSight(visionSource, test);
     }
 }

@@ -48,22 +48,32 @@ export default class DetectionModeHearing extends DetectionMode {
         return true;
     }
 
+    /**
+     * The collision configuration of sound, created on first use.
+     * @type {Partial<foundry.canvas.geometry.types.PointSourcePolygonConfig> | undefined}
+     */
+    static #collisionConfig;
+
     /** @override */
     _testLOS(visionSource, mode, target, test) {
-        let config;
+        let config = DetectionModeHearing.#collisionConfig;
 
-        if (game.release.generation >= 14) {
-            config = {
-                type: "sound",
-                edgeDirectionMode: CONST.EDGE_DIRECTION_MODES.REVERSED,
-                useThreshold: true,
-            };
-        } else {
-            config = {
-                type: "sound",
-                wallDirectionMode: foundry.canvas.geometry.PointSourcePolygon.WALL_DIRECTION_MODES.REVERSED,
-                useThreshold: true,
-            };
+        if (!config) {
+            if (game.release.generation >= 14) {
+                config = {
+                    type: "sound",
+                    edgeDirectionMode: CONST.EDGE_DIRECTION_MODES.REVERSED,
+                    useThreshold: true,
+                };
+            } else {
+                config = {
+                    type: "sound",
+                    wallDirectionMode: foundry.canvas.geometry.PointSourcePolygon.WALL_DIRECTION_MODES.REVERSED,
+                    useThreshold: true,
+                };
+            }
+
+            DetectionModeHearing.#collisionConfig = config;
         }
 
         return !this.constructor._testCollision(visionSource, test, config);

@@ -45,7 +45,8 @@ export default (Actor) => class extends Actor {
     prepareDerivedData() {
         super.prepareDerivedData();
 
-        const itemPile = game.itempiles?.API.getActorFlagData(this);
+        // Only actors with Item Piles flags can be piles, so skip the lookup for all other actors
+        const itemPile = this.flags["item-piles"] ? game.itempiles?.API.getActorFlagData(this) : undefined;
 
         if (itemPile && itemPile.enabled && (itemPile.type === game.itempiles.pile_types.PILE
             || itemPile.type === game.itempiles.pile_types.CONTAINER
@@ -188,7 +189,19 @@ function evaluateHearingRange(actor) {
     let range = HEARING_RANGE_CACHE.get(formula);
 
     if (range === undefined) {
-        range = new foundry.dice.Roll(formula).evaluateSync().total;
+        // An invalid formula must not break the preparation of the actor
+        try {
+            range = new foundry.dice.Roll(formula).evaluateSync().total;
+        } catch (error) {
+            range = NaN;
+            console.warn(`Nik's Vision 5e | The Default Hearing Range "${defaultHearingRange}" could not be evaluated `
+                + `for ${actor.uuid} (formula "${formula}"); 0 is used instead.`, error);
+        }
+
+        if (!Number.isFinite(range)) {
+            range = 0;
+        }
+
         HEARING_RANGE_CACHE.set(formula, range);
     }
 
@@ -307,7 +320,7 @@ function isPoisonDamage(damage) {
  */
 function isPoisonousAttack(activity) {
     return activity.type === "attack" && (activity.damage.parts.some(isPoisonDamage)
-        || /\[\s*poison\s*\]/i.test(activity.damage.critical));
+        || /\[\s*poison\s*\]/i.test(activity.damage.critical?.bonus ?? ""));
 }
 
 /**

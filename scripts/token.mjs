@@ -243,7 +243,9 @@ export default (Token) => class extends Token {
         invalidateSpectatorUsers();
 
         if (statusId === CONFIG.specialStatusEffects.BLEEDING
+            || statusId === CONFIG.specialStatusEffects.BURNING
             || statusId === CONFIG.specialStatusEffects.DISEASED
+            || statusId === CONFIG.specialStatusEffects.INCAPACITATED
             || statusId === CONFIG.specialStatusEffects.INAUDIBLE
             || statusId === CONFIG.specialStatusEffects.MAGICAL
             || statusId === CONFIG.specialStatusEffects.MATERIAL
@@ -293,14 +295,17 @@ export default (Token) => class extends Token {
         // Patch because Token#_renderDetectionFilter uses Token#_detectionFilter instead of Token#detectionFilter
         this.detectionFilterMesh.render = (renderer) => this._renderDetectionFilter(renderer);
 
-        const impreciseTexture = await foundry.canvas.loadTexture(this.document.constructor.DEFAULT_ICON);
+        // Core keeps the children of the token when it is redrawn, so the imprecise mesh is created only once
+        if (!this.#impreciseMesh || this.#impreciseMesh.destroyed) {
+            const impreciseTexture = await foundry.canvas.loadTexture(this.document.constructor.DEFAULT_ICON);
 
-        this.#impreciseMesh = this.addChildAt(
-            new foundry.canvas.containers.SpriteMesh(impreciseTexture),
-            this.getChildIndex(this.detectionFilterMesh),
-        );
-        this.#impreciseMesh.anchor.set(0.5, 0.5);
-        this.#impreciseMesh.renderable = false;
+            this.#impreciseMesh = this.addChildAt(
+                new foundry.canvas.containers.SpriteMesh(impreciseTexture),
+                this.getChildIndex(this.detectionFilterMesh),
+            );
+            this.#impreciseMesh.anchor.set(0.5, 0.5);
+            this.#impreciseMesh.renderable = false;
+        }
 
         if (game.release.generation >= 14) {
             this.#impreciseChildren = [

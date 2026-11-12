@@ -1,4 +1,5 @@
 import { convertUnits, fromFeet } from "./utils.mjs";
+import { invalidatePreciseSightModes } from "./detection-modes/base.mjs";
 import { invalidateDetectionTests } from "./visibility.mjs";
 
 export default (TokenDocument) => class extends TokenDocument {
@@ -128,6 +129,7 @@ export default (TokenDocument) => class extends TokenDocument {
      */
     _setDetectionMode(id, range, enabled = true) {
         invalidateDetectionTests(this.detectionModes);
+        invalidatePreciseSightModes(this.detectionModes);
 
         if (game.release.generation >= 14) {
             this.detectionModes[id] = { range, enabled };

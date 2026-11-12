@@ -49,14 +49,6 @@ export default class DetectionModeBlindsense extends DetectionMode {
 
     /** @override */
     _testLOS(visionSource, mode, target, test) {
-        return !this.constructor._testCollision(
-            visionSource,
-            test,
-            {
-                type: "sight",
-                useThreshold: true,
-                priority: Infinity,
-            },
-        );
+        return this._testUnobstructedSight(visionSource, test);
     }
 }

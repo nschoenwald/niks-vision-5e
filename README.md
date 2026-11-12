@@ -377,6 +377,7 @@ _Older versions:_
 Feats and effects are recognized by name, in any of the languages below:
 
 - Names aren't case-sensitive.
+- The whole name must match. A name with extra words, such as `Sense Magic (Recharge)` or `Greater Devil's Sight`, isn't recognized.
 - Both `'` and `’` work as apostrophes.
 - In French, the space before a colon is optional.
 - Invocation names prefixed with `Eldritch Invocation:`, `Invocation:`, or `Eldritch Adept:` (including the plural forms) are recognized as well.

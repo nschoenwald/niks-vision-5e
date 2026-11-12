@@ -1,5 +1,18 @@
 # Changelog
 
+## 14.2.2
+
+- **Faster vision with Detect Magic, See Invisibility, Ethereal Sight and Witch Sight.** Scenes with many magical, invisible or ethereal creatures stay smoother while tokens move, especially when a caster has Detect Magic active.
+- **Faster magical senses.** Creatures with several detection senses at once (for example Divine Sense together with Detect Evil and Good and Detect Magic) no longer repeat the same line-of-sight checks.
+- **Feat and effect names now have to match exactly.** Before, most recognized names also matched when they appeared inside a longer name, so a feat like "Greater Sense Magic (Recharge)" could count as Sense Magic by accident. Rename such items to the exact name if you relied on this. Matching is also faster when actors are loaded or updated.
+
+### Fixes
+
+- **Burning and Incapacitated** now update what tokens can see right away. Before, setting a creature on fire in the dark, or incapacitating a creature with Thermal Vision (also through Paralyzed, Stunned and similar conditions), only showed up after the next unrelated vision update.
+- **Detect Poison and Disease** now also recognizes natural weapon attacks whose critical hit bonus is marked `[poison]`.
+- **Default Hearing Range:** a formula that can't be calculated for a creature (for example one that refers to a text value) no longer breaks that creature's data. The creature gets a hearing range of 0 and a warning appears in the browser console.
+- Tokens no longer pile up a hidden copy of their placeholder image each time they are redrawn, for example when their image or size changes.
+
 ## 14.2.1
 
 - Verified with D&D 5e 6.1. Nothing changes in how the module works.

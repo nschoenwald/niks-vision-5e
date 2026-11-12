@@ -1,39 +1,33 @@
 export class Matcher {
-    /** @type {RegExp} */
-    #pattern;
+    /**
+     * The keys keyed by the lowercased names that match them exactly.
+     * @type {Map<string, string>}
+     */
+    #keys = new Map();
 
     constructor(object) {
-        object = Object.fromEntries(Object.entries(object).map(([key, matches]) => [key, Array.from(new Set(
-            (Array.isArray(matches) ? matches : [matches])
+        for (const [key, matches] of Object.entries(object)) {
+            const names = (Array.isArray(matches) ? matches : [matches])
                 .map((m) => (Array.isArray(m) ? m : [m]).map((m) => Array.isArray(m) ? m : [m]))
-                .flatMap((m) => m.reduce((a, b) => a.flatMap((c) => b.map((d) => c + d)))),
-        )).sort()]).sort((a, b) => a[0].compare(b[0])));
+                .flatMap((m) => m.reduce((a, b) => a.flatMap((c) => b.map((d) => c + d))));
 
-        this.#pattern = new RegExp(`^${Object.entries(object).map(([key, matches]) => `(?<${key}>${matches.map(RegExp.escape).join("|")})`).join("|")}$`, "i");
+            for (const name of new Set(names.map((name) => name.toLowerCase()))) {
+                if (this.#keys.has(name)) {
+                    throw new Error(`Duplicate name "${name}" for "${key}" and "${this.#keys.get(name)}"`);
+                }
 
-        const matches = Object.values(object).flat();
-
-        if (matches.length !== new Set(matches).size) {
-            throw new Error();
+                this.#keys.set(name, key);
+            }
         }
     }
 
     /**
+     * Get the key whose names include the given string, ignoring case.
      * @param {string} string
      * @returns {string | undefined}
      */
     match(string) {
-        const match = this.#pattern.exec(string);
-
-        if (!match) {
-            return;
-        }
-
-        for (const key in match.groups) {
-            if (match.groups[key]) {
-                return key;
-            }
-        }
+        return this.#keys.get(string.toLowerCase());
     }
 }
 
